@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _showOrangeButton = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Position détectée avec succès !')),
+        const SnackBar(content: Text('Position extraite avec succès !')),
       );
     } else {
       setState(() {
@@ -83,14 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Text(
               "Vérificateur Éligibilité Fibre",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _controller,
-              maxLines: 4,
+              maxLines: 3,
               decoration: const InputDecoration(
-                hintText: "Collez le message ou le lien de localisation WhatsApp ici...",
+                hintText: "Collez le message WhatsApp contenant la position ici...",
                 border: OutlineInputBorder(),
                 fillColor: Colors.white,
                 filled: true,
@@ -99,21 +99,38 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _processText,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
               child: const Text("1. Extraire et Localiser", style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-              child: Text(_detectedArea, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.orange), textAlign: TextAlign.center),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Text(
+                _detectedArea,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.orange),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 16),
             if (_showOrangeButton)
               ElevatedButton(
                 onPressed: _launchOrange,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6600), padding: const EdgeInsets.symmetric(vertical: 14)),
-                child: const Text("2. Vérifier Éligibilité Orange", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6600),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  "2. Vérifier Éligibilité Orange",
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
           ],
         ),
