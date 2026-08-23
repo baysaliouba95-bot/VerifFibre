@@ -1,0 +1,134 @@
+name: Build Flutter APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Configuration des Dependances
+        run: |
+          # Force l'ajout du package indispensable sans recréer le projet entier
+          flutter pub add url_launcher
+
+      - name: Injection du Code Application
+        run: |
+          mkdir -p lib
+          cat << 'EOF' > lib/main.dart
+          import 'package:flutter/material.dart';
+          import 'package:flutter/services.dart';
+          import 'package:url_launcher/url_launcher.dart';
+
+          void main() => runApp(const MyApp());
+
+          class MyApp extends StatelessWidget {
+            const MyApp({super.key});
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                title: 'VerifFibre',
+                debugShowCheckedModeBanner: false,
+                theme: ThemeData(primarySwatch: Colors.orange, useMaterial3: true),
+                home: const HomeScreen(),
+              );
+            }
+          }
+
+          class HomeScreen extends StatefulWidget {
+            const HomeScreen({super.key});
+            @override
+            State<HomeScreen> createState() => _HomeScreenState();
+          }
+
+          class _HomeScreenState extends State<HomeScreen> {
+            final TextEditingController _controller = TextEditingController();
+            String _detectedArea = 'En attente de coordonnées';
+            bool _showOrangeButton = false;
+
+            void _processText() {
+              final text = _controller.text;
+              final regExp = RegExp(r'(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)');
+              final match = regExp.firstMatch(text);
+              if (match != null) {
+                setState(() {
+                  _detectedArea = 'Coordonnées détectées : ${match.group(1)}, ${match.group(2)}';
+                  _showOrangeButton = true;
+                });
+              }
+            }
+
+            Future<void> _launchOrange() async {
+              final Uri url = Uri.parse('https://orange.sn');
+              await Clipboard.setData(ClipboardData(text: _detectedArea));
+              launchUrl(url, mode: LaunchMode.externalApplication);
+            }
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('VerifFibre Orange Sénégal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  backgroundColor: Colors.black
+                ),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text('Vérificateur Éligibilité Fibre', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _controller,
+                        maxLines: 3,
+                        decoration: const InputDecoration(hintText: 'Collez le message WhatsApp contenant la position ici...'),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _processText,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                        child: const Text('1. Extraire et Localiser', style: TextStyle(color: Colors.white)),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
+                        child: Text(_detectedArea, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_showOrangeButton)
+                        ElevatedButton(
+                          onPressed: _launchOrange,
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                          child: const Text('2. Vérifier Éligibilité Orange', style: TextStyle(color: Colors.white)),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          }
+          EOF
+
+      - name: Generer l'APK final
+        run: flutter build apk --debug
+
+      - name: Telecharger l'artefact APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MonApkFibreDefinitif
+          path: build/app/outputs/flutter-apk/app-debug.apk
