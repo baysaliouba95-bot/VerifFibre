@@ -26,11 +26,12 @@ jobs:
           rm -rf pubspec.yaml
           flutter create --project-name=verif_fibre_orange . --force
           flutter pub add url_launcher
-          
+
       - name: Restore App Code
         run: |
           mkdir -p lib
-          echo "import 'package:flutter/material.dart';
+          cat << 'EOF' > lib/main.dart
+          import 'package:flutter/material.dart';
           import 'package:flutter/services.dart';
           import 'package:url_launcher/url_launcher.dart';
 
@@ -66,7 +67,7 @@ jobs:
               final match = regExp.firstMatch(text);
               if (match != null) {
                 setState(() {
-                  _detectedArea = 'Coordonnées détectées : \${match.group(1)}, \${match.group(2)}';
+                  _detectedArea = 'Coordonnées détectées : ${match.group(1)}, ${match.group(2)}';
                   _showOrangeButton = true;
                 });
               }
@@ -81,7 +82,10 @@ jobs:
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                appBar: AppBar(title: const Text('VerifFibre Orange Sénégal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), backgroundColor: Colors.black),
+                appBar: AppBar(
+                  title: const Text('VerifFibre Orange Sénégal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  backgroundColor: Colors.black
+                ),
                 body: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -89,19 +93,37 @@ jobs:
                     children: [
                       const Text('Vérificateur Éligibilité Fibre', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
-                      TextField(controller: _controller, maxLines: 3, decoration: const InputDecoration(hintText: 'Collez le message WhatsApp contenant la position ici...')),
+                      TextField(
+                        controller: _controller,
+                        maxLines: 3,
+                        decoration: const InputDecoration(hintText: 'Collez le message WhatsApp contenant la position ici...'),
+                      ),
                       const SizedBox(height: 12),
-                      ElevatedButton(onPressed: _processText, style: ElevatedButton.styleFrom(backgroundColor: Colors.black), child: const Text('1. Extraire et Localiser', style: TextStyle(color: Colors.white))),
+                      ElevatedButton(
+                        onPressed: _processText,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                        child: const Text('1. Extraire et Localiser', style: TextStyle(color: Colors.white)),
+                      ),
                       const SizedBox(height: 16),
-                      Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)), child: Text(_detectedArea, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
+                        child: Text(_detectedArea, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                      ),
                       const SizedBox(height: 16),
-                      if (_showOrangeButton) ElevatedButton(onPressed: _launchOrange, style: ElevatedButton.styleFrom(backgroundColor: Colors.orange), child: const Text('2. Vérifier Éligibilité Orange', style: TextStyle(color: Colors.white))),
+                      if (_showOrangeButton)
+                        ElevatedButton(
+                          onPressed: _launchOrange,
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                          child: const Text('2. Vérifier Éligibilité Orange', style: TextStyle(color: Colors.white)),
+                        ),
                     ],
                   ),
                 ),
               );
             }
-          }" > lib/main.dart
+          }
+          EOF
 
       - name: Build Final APK
         run: flutter build apk --debug
